@@ -1,8 +1,10 @@
 # Paren las Notis — Notificaciones de Paren la Mano 
 
 <div align="center">
-  <img src="screenshots/screenshot1.png" alt="Captura 1" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
-  <img src="screenshots/screenshot2.png" alt="Captura 2" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="screenshots/screenshots1.jpeg" alt="Captura 1" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="screenshots/screenshots2.jpeg" alt="Captura 2" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="screenshots/screenshots3.jpeg" alt="Captura 3" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="screenshots/screenshots4.jpeg" alt="Captura 4" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
 </div>
 
 Paren las Notis es una extensión para navegadores, creado por un fan neurotico que quiere SOLO recibir las notificaciones del programa de Paren La Mano del canal de Vorterix y no de todos sus programas o recortes. (Siempre desde el respeto con sus demas programas).
