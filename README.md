@@ -1,15 +1,16 @@
 # Paren las Notis — Notificaciones de Paren la Mano 
 
 <div align="center">
-  <img src="Paren%20las%20Notis/screenshots/screenshots1.jpeg" alt="Captura 1" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
-  <img src="Paren%20las%20Notis/screenshots/screenshots2.jpeg" alt="Captura 2" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
-  <img src="Paren%20las%20Notis/screenshots/screenshots3.jpeg" alt="Captura 3" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
-  <img src="Paren%20las%20Notis/screenshots/screenshots4.jpeg" alt="Captura 4" width="45%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="Paren%20las%20Notis/screenshots/screenshots1.jpeg" alt="Captura 1" width="22%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="Paren%20las%20Notis/screenshots/screenshots2.jpeg" alt="Captura 2" width="22%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="Paren%20las%20Notis/screenshots/screenshots3.jpeg" alt="Captura 3" width="22%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
+  <img src="Paren%20las%20Notis/screenshots/screenshots4.jpeg" alt="Captura 4" width="22%" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 5px;"/>
 </div>
 
 Paren las Notis es una extensión para navegadores, creado por un fan neurotico que quiere SOLO recibir las notificaciones del programa de Paren La Mano del canal de Vorterix y no de todos sus programas o recortes. (Siempre desde el respeto con sus demas programas).
 
 Si les sirve agradeceria que me sigan en instagram: @tabbidm02
+
 Y si tienen sugerencias, son mas que bienvenidas.
 
 A continuacion una pequeña descripcion y tutorial de como instalarla: (generado rotunda y contundentemente con IA)
