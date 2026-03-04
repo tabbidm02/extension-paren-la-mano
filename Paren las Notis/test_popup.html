@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PLM Notifier - Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="popup.css" />
+    <script>
+        // Mock chrome APIs with REAL Vorterix video data
+        const mockVideos = [
+            // ── Marzo 2026 ──
+            {
+                id: "25I_J5IMlPE",
+                title: "PUNCH, EL TRIBUNERO Y BOCA | #ParenLaMano Completo - 03/03 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=25I_J5IMlPE",
+                published: "2026-03-03T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/25I_J5IMlPE/hqdefault.jpg",
+                seen: false,
+                liked: true
+            },
+            {
+                id: "4Bwees6nf70",
+                title: "EL UPD DE PAREN LA MANO - #PARENLAMANO COMPLETO - 02/03 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=4Bwees6nf70",
+                published: "2026-03-02T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/4Bwees6nf70/hqdefault.jpg",
+                seen: false,
+                liked: false
+            },
+            // ── Febrero 2026 ──
+            {
+                id: "mX4Z0DqIeBw",
+                title: "NUEVAS OFICINAS, NUEVOS CÓDIGOS | #ParenLaMano Completo - 28/02 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=mX4Z0DqIeBw",
+                published: "2026-02-28T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/mX4Z0DqIeBw/hqdefault.jpg",
+                seen: false,
+                liked: false
+            },
+            {
+                id: "o9P7sYv_2r8",
+                title: "VOLVIMOS CON TODO | #ParenLaMano Completo - 25/02 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=o9P7sYv_2r8",
+                published: "2026-02-25T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/o9P7sYv_2r8/hqdefault.jpg",
+                seen: true,
+                liked: true
+            },
+            // ── Diciembre 2025 ──
+            {
+                id: "FaZNaoLV4kc",
+                title: "CHAU 2025: NOS VEMOS EN PÁRENSE DE MANOS | #ParenLaMano Completo - 18/12",
+                link: "https://www.youtube.com/watch?v=FaZNaoLV4kc",
+                published: "2025-12-18T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/FaZNaoLV4kc/hqdefault.jpg",
+                seen: true,
+                liked: false
+            },
+            {
+                id: "4WALJcHDE2k",
+                title: "PLM ESPECIAL NAVIDEÑO | #ParenLaMano Completo - 24/12",
+                link: "https://www.youtube.com/watch?v=4WALJcHDE2k",
+                published: "2025-12-24T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/4WALJcHDE2k/hqdefault.jpg",
+                seen: true,
+                liked: true
+            },
+            // ── Octubre 2025 ──
+            {
+                id: "Zk1l5k6nK0Q",
+                title: "CASTRO Y LOS BORRACHITOS | #ParenLaMano Completo - 16/10 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=Zk1l5k6nK0Q",
+                published: "2025-10-16T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/Zk1l5k6nK0Q/hqdefault.jpg",
+                seen: true,
+                liked: false
+            },
+            {
+                id: "aP2b1-1l3cM",
+                title: "C0KER VS ROBER: DUELO DE RELOJES | #ParenLaMano Completo - 24/10 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=aP2b1-1l3cM",
+                published: "2025-10-24T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/aP2b1-1l3cM/hqdefault.jpg",
+                seen: true,
+                liked: false
+            },
+            // ── Mayo 2025 ──
+            {
+                id: "Z5Y0N5j4G6s",
+                title: "VOLVIÓ EL PANZAS | #ParenLaMano Completo - 15/05 | VORTERIX",
+                link: "https://www.youtube.com/watch?v=Z5Y0N5j4G6s",
+                published: "2025-05-15T22:00:00Z",
+                thumbnail: "https://i.ytimg.com/vi/Z5Y0N5j4G6s/hqdefault.jpg",
+                seen: true,
+                liked: true
+            }
+        ];
+
+        window.chrome = {
+            storage: {
+                local: {
+                    _data: { videoHistory: mockVideos, youtubeApiKey: "" },
+                    get: function (key, cb) {
+                        const result = {};
+                        if (typeof key === 'string') {
+                            result[key] = this._data[key];
+                        } else if (Array.isArray(key)) {
+                            key.forEach(k => result[k] = this._data[k]);
+                        }
+                        cb(result);
+                    },
+                    set: function (obj, cb) {
+                        Object.assign(this._data, obj);
+                        if (cb) cb();
+                    }
+                }
+            },
+            tabs: {
+                create: function (opts) {
+                    console.log("[Mock] Opening tab:", opts.url);
+                    const opened = window.open(opts.url, '_blank');
+                    if (!opened) {
+                        // Si el navegador bloquea el popup, abrimos en la misma pestaña
+                        window.location.href = opts.url;
+                    }
+                }
+            },
+            runtime: {
+                sendMessage: function (msg, cb) {
+                    console.log("[Mock] Message sent:", msg);
+                    if (cb) cb({ ok: true });
+                }
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Banner -->
+        <div class="banner">
+            <img src="images/upscalemedia-transformed.jpeg" alt="Paren la Mano" class="banner-img" />
+
+            <!-- Developer Info Button -->
+            <button class="btn-info" id="btnInfo" title="Información">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </button>
+            <!-- Settings gear -->
+            <button class="btn-settings" id="btnSettings" title="Configuración">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="unseen">
+                <svg class="tab-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                    stroke-width="1.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                <span>no vistos</span>
+            </button>
+            <button class="tab" data-tab="recent">
+                <svg class="tab-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                    stroke-width="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span>recientes</span>
+            </button>
+            <button class="tab" data-tab="favorites">
+                <svg class="tab-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                    </path>
+                </svg>
+                <span>favoritos</span>
+            </button>
+        </div>
+
+        <!-- Video List -->
+        <div class="video-list" id="videoList"></div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"
+                class="empty-icon">
+                <path
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p class="empty-title">Ningún episodio detectado</p>
+            <p class="empty-desc">Estamos monitoreando el canal.<br />Te avisaremos en cuanto suba un nuevo Paren la
+                Mano.</p>
+        </div>
+
+        <!-- Info Modal -->
+        <div class="info-modal" id="infoModal" style="display: none;">
+            <div class="info-content">
+                <button class="btn-close-info" id="btnCloseInfo">✕</button>
+                <p class="info-text" style="margin-bottom: 12px; margin-top: 10px;">By</p>
+                <a href="https://instagram.com/tu_usuario" target="_blank" class="info-link">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    @tu_usuario
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
