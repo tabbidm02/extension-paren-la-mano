@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────
 
 const ALARM_NAME = "plm-check";
+const LIVE_ALARM_NAME = "plm-live-check";
 
 // Playlists to monitor
 const PLAYLISTS = [
@@ -20,6 +21,7 @@ const STORAGE_KEY = "lastNotifiedVideoId";
 const LATEST_VIDEO_KEY = "latestVideo";
 const VIDEO_HISTORY_KEY = "videoHistory";
 const LAST_CHECK_TIME_KEY = "lastCheckTime";
+const LAST_LIVE_NOTIF_KEY = "lastLiveNotifDate";
 
 // Performance limits
 const CHECK_INTERVAL_MINUTES = 15;
@@ -35,11 +37,13 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 
   chrome.alarms.create(ALARM_NAME, { periodInMinutes: CHECK_INTERVAL_MINUTES });
+  chrome.alarms.create(LIVE_ALARM_NAME, { periodInMinutes: 1 });
   checkYouTubeAPI();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   chrome.alarms.create(ALARM_NAME, { periodInMinutes: CHECK_INTERVAL_MINUTES });
+  chrome.alarms.create(LIVE_ALARM_NAME, { periodInMinutes: 1 });
 });
 
 // ── Alarm handler ────────────────────────────────────────
@@ -70,6 +74,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         }
       });
     }
+  }
+
+  // ── Live program notification at 19:00 ──────────────────
+  if (alarm.name === LIVE_ALARM_NAME) {
+    checkLiveProgram();
   }
 });
 
@@ -176,9 +185,7 @@ async function mergeAndSaveVideos(newVideos) {
   ]);
   const existingHistory = data[VIDEO_HISTORY_KEY] || [];
   const existingMap = new Map(existingHistory.map((v) => [v.id, v]));
-
-  let hasNewUnseen = false;
-  let newestNew = null;
+  const existingIds = new Set(existingHistory.map((v) => v.id));
 
   for (const video of newVideos) {
     if (existingMap.has(video.id)) {
@@ -192,13 +199,6 @@ async function mergeAndSaveVideos(newVideos) {
     } else {
       // New video
       existingMap.set(video.id, { ...video, seen: false, liked: false });
-      hasNewUnseen = true;
-      if (
-        !newestNew ||
-        new Date(video.published) > new Date(newestNew.published)
-      ) {
-        newestNew = video;
-      }
     }
   }
 
@@ -220,18 +220,87 @@ async function mergeAndSaveVideos(newVideos) {
     chrome.storage.local.set({ [LATEST_VIDEO_KEY]: merged[0] });
   }
 
-  // Notify user about newest unseen video
-  if (hasNewUnseen && newestNew) {
+  // Only notify for new videos that contain "COMPLETO" in the title
+  // This filters out scheduled/upcoming videos that are already in the playlist
+  const completedNewVideos = newVideos.filter(
+    (v) => !existingIds.has(v.id) && v.title.toUpperCase().includes("COMPLETO")
+  );
+
+  if (completedNewVideos.length > 0) {
+    // Find the newest completed video
+    const newestCompleted = completedNewVideos.sort(
+      (a, b) => new Date(b.published) - new Date(a.published)
+    )[0];
+
     const lastId = data[STORAGE_KEY];
-    if (lastId !== newestNew.id) {
-      chrome.notifications.create(`plm-${newestNew.id}`, {
+    if (lastId !== newestCompleted.id) {
+      chrome.notifications.create(`plm-${newestCompleted.id}`, {
         type: "basic",
         iconUrl: "icons/icon128.png",
         title: "🔴 ¡Nuevo Paren la Mano!",
-        message: newestNew.title,
+        message: newestCompleted.title,
         priority: 2,
       });
-      chrome.storage.local.set({ [STORAGE_KEY]: newestNew.id });
+      chrome.storage.local.set({ [STORAGE_KEY]: newestCompleted.id });
+      // Update latest video to the notified one for click handler
+      chrome.storage.local.set({ [LATEST_VIDEO_KEY]: newestCompleted });
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//  Live program notification at 19:00
+// ─────────────────────────────────────────────────────────
+async function checkLiveProgram() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinutes = now.getMinutes();
+
+  // Only fire during the 19:00 hour
+  if (currentHour !== 19) return;
+
+  // Check if we already sent the live notification today
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const data = await chrome.storage.local.get([LAST_LIVE_NOTIF_KEY, VIDEO_HISTORY_KEY]);
+  const lastLiveDate = data[LAST_LIVE_NOTIF_KEY];
+
+  if (lastLiveDate === todayStr) {
+    // Already notified today
+    return;
+  }
+
+  // Only on weekdays (Monday=1 to Friday=5)
+  const dayOfWeek = now.getDay();
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    console.log("[PLM] Weekend, skipping live notification.");
+    return;
+  }
+
+  console.log(`[PLM] 19:${String(currentMinutes).padStart(2, "0")} - Sending live program notification!`);
+
+  // Look for today's live/scheduled video (one without "COMPLETO")
+  const history = data[VIDEO_HISTORY_KEY] || [];
+  const liveVideo = history.find(
+    (v) => !v.title.toUpperCase().includes("COMPLETO")
+  );
+
+  const message = liveVideo
+    ? liveVideo.title
+    : "El programa está al aire en Vorterix";
+
+  chrome.notifications.create("plm-live-" + todayStr, {
+    type: "basic",
+    iconUrl: "icons/icon128.png",
+    title: "🔴 ¡Paren la Mano en vivo!",
+    message: message,
+    priority: 2,
+  });
+
+  // Mark today as notified
+  chrome.storage.local.set({ [LAST_LIVE_NOTIF_KEY]: todayStr });
+
+  // If we found a live video, set it as latest for click handler
+  if (liveVideo) {
+    chrome.storage.local.set({ [LATEST_VIDEO_KEY]: liveVideo });
   }
 }
