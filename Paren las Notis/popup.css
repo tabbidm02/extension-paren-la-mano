@@ -703,3 +703,97 @@ html {
   background: rgba(255, 255, 255, 0.1);
   text-decoration: underline;
 }
+
+/* ── EN VIVO – Live Card ─────────────── */
+.video-card.live {
+  border: 4px solid #a855f7;
+  box-shadow:
+    0 0 14px rgba(168, 85, 247, 0.7),
+    0 0 35px rgba(168, 85, 247, 0.4),
+    0 0 60px rgba(168, 85, 247, 0.15),
+    inset 0 0 10px rgba(168, 85, 247, 0.1);
+  animation: liveGlow 2s ease-in-out infinite alternate, fadeInUp 0.3s ease forwards;
+}
+
+@keyframes liveGlow {
+  from {
+    box-shadow:
+      0 0 14px rgba(168, 85, 247, 0.7),
+      0 0 35px rgba(168, 85, 247, 0.4),
+      0 0 60px rgba(168, 85, 247, 0.15);
+  }
+
+  to {
+    box-shadow:
+      0 0 20px rgba(168, 85, 247, 0.9),
+      0 0 50px rgba(168, 85, 247, 0.55),
+      0 0 80px rgba(168, 85, 247, 0.25);
+  }
+}
+
+/* ── EN VIVO – Month Divider ─────────── */
+.month-divider.live-divider .month-label {
+  background: transparent;
+  color: #ff4444;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 8px rgba(255, 68, 68, 0.8),
+    0 0 20px rgba(255, 68, 68, 0.5);
+  animation: glowText 1.5s ease-in-out infinite;
+}
+
+@keyframes glowText {
+
+  0%,
+  100% {
+    text-shadow:
+      0 0 8px rgba(255, 68, 68, 0.8),
+      0 0 20px rgba(255, 68, 68, 0.5);
+  }
+
+  50% {
+    text-shadow:
+      0 0 14px rgba(255, 68, 68, 1),
+      0 0 30px rgba(255, 68, 68, 0.7),
+      0 0 50px rgba(255, 68, 68, 0.3);
+  }
+}
+
+.month-divider.live-divider::before,
+.month-divider.live-divider::after {
+  background: rgba(168, 85, 247, 0.4);
+  height: 2px;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e74c3c;
+  color: #FFFFFF;
+  font-family: 'Poppins', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: pulseBadge 1.5s ease-in-out infinite;
+  line-height: 14px;
+}
+
+@keyframes pulseBadge {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}

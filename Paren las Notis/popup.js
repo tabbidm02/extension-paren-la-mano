@@ -182,6 +182,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // ── EN VIVO detection helpers ──────────
+    function isLiveWindow() {
+        const now = new Date();
+        const day = now.getDay(); // 0=Sun, 6=Sat
+        if (day === 0 || day === 6) return false; // weekdays only
+        const mins = now.getHours() * 60 + now.getMinutes();
+        // 18:55 = 1135 min, 21:05 = 1265 min
+        return mins >= 1135 && mins <= 1265;
+    }
+
+    function isLiveVideo(video) {
+        return !video.title.toUpperCase().includes("COMPLETO");
+    }
+
+    const liveNow = isLiveWindow();
+
     // ── Render video cards with month dividers ─
     function renderVideos() {
         const filtered = getFilteredVideos();
@@ -198,17 +214,31 @@ document.addEventListener("DOMContentLoaded", () => {
         let html = "";
         let lastMonthKey = "";
 
-        filtered.forEach((video, index) => {
-            const monthKey = getMonthKey(video.published);
+        let liveHeaderShown = false;
 
-            if (monthKey !== lastMonthKey) {
-                const label = getMonthLabel(video.published);
-                html += `<div class="month-divider"><span class="month-label">${label}</span></div>`;
-                lastMonthKey = monthKey;
+        filtered.forEach((video, index) => {
+            const videoIsLive = liveNow && isLiveVideo(video);
+
+            // Show "EN VIVO" divider before the first live video
+            if (videoIsLive && !liveHeaderShown) {
+                html += `<div class="month-divider live-divider"><span class="month-label">🔴 EN VIVO</span></div>`;
+                liveHeaderShown = true;
             }
 
+            // Only show month divider for non-live videos
+            if (!videoIsLive) {
+                const monthKey = getMonthKey(video.published);
+                if (monthKey !== lastMonthKey) {
+                    const label = getMonthLabel(video.published);
+                    html += `<div class="month-divider"><span class="month-label">${label}</span></div>`;
+                    lastMonthKey = monthKey;
+                }
+            }
+
+            const liveClass = videoIsLive ? "live" : "";
+
             html += `
-        <div class="video-card ${!video.seen ? "unseen" : ""}" 
+        <div class="video-card ${!video.seen ? "unseen" : ""} ${liveClass}" 
              data-id="${video.id}" 
              data-link="${video.link}"
              style="animation-delay: ${Math.min(index * 0.05, 0.5)}s">
