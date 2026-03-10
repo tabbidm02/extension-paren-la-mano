@@ -2,10 +2,13 @@
 //  PLM Notifier – Background Service Worker
 //  • Uses YouTube Data API v3 exclusively to fetch 100+ videos
 //  • Supports multiple playlists
+//  • Two notifications:
+//    1. Live program alert at 18:55
+//    2. New "COMPLETO" video 15 min after Chrome starts
 // ─────────────────────────────────────────────────────────
 
-const ALARM_NAME = "plm-check";
 const LIVE_ALARM_NAME = "plm-live-check";
+const STARTUP_ALARM_NAME = "plm-startup-check";
 
 // Playlists to monitor
 const PLAYLISTS = [
@@ -20,12 +23,10 @@ const YOUTUBE_API_KEY = "AIzaSyAYT-8LvJErfLByfryoJr7Sq7A7RXG0tsQ";
 const STORAGE_KEY = "lastNotifiedVideoId";
 const LATEST_VIDEO_KEY = "latestVideo";
 const VIDEO_HISTORY_KEY = "videoHistory";
-const LAST_CHECK_TIME_KEY = "lastCheckTime";
 const LAST_LIVE_NOTIF_KEY = "lastLiveNotifDate";
 
 // Performance limits
-const CHECK_INTERVAL_MINUTES = 15;
-const MAX_STORED_VIDEOS = 300; // Increased to hold more history
+const MAX_STORED_VIDEOS = 300;
 
 // ── Bootstrap ────────────────────────────────────────────
 chrome.runtime.onInstalled.addListener(async () => {
@@ -36,49 +37,33 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ [VIDEO_HISTORY_KEY]: cleaned });
   }
 
-  chrome.alarms.create(ALARM_NAME, { periodInMinutes: CHECK_INTERVAL_MINUTES });
+  // Live check alarm – runs every 1 minute (only acts at 18:55-19:00)
   chrome.alarms.create(LIVE_ALARM_NAME, { periodInMinutes: 1 });
-  checkYouTubeAPI();
+
+  // Also schedule the startup check (in case this is a fresh install)
+  chrome.alarms.create(STARTUP_ALARM_NAME, { delayInMinutes: 15 });
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  chrome.alarms.create(ALARM_NAME, { periodInMinutes: CHECK_INTERVAL_MINUTES });
+  // Live check alarm
   chrome.alarms.create(LIVE_ALARM_NAME, { periodInMinutes: 1 });
+
+  // Schedule video check 15 minutes after Chrome starts
+  chrome.alarms.create(STARTUP_ALARM_NAME, { delayInMinutes: 15 });
+  console.log("[PLM] Chrome started. Video check scheduled in 15 minutes.");
 });
 
 // ── Alarm handler ────────────────────────────────────────
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === ALARM_NAME) {
-    const now = Date.now();
-    const currentHour = new Date().getHours();
-
-    // Active window: From 21:00 (when the show ends) until 07:00 next day.
-    const isActiveWindow = currentHour >= 21 || currentHour < 7;
-
-    if (isActiveWindow) {
-      console.log(`[PLM] Active window (${currentHour}:00). Checking API...`);
-      chrome.storage.local.set({ [LAST_CHECK_TIME_KEY]: now });
-      checkYouTubeAPI();
-    } else {
-      // Outside active window: Check only every 2 hours (120 minutes)
-      chrome.storage.local.get([LAST_CHECK_TIME_KEY], (data) => {
-        const lastCheckTime = data[LAST_CHECK_TIME_KEY] || 0;
-        const TWO_HOURS_MS = 120 * 60 * 1000;
-
-        if (now - lastCheckTime >= TWO_HOURS_MS) {
-          console.log(`[PLM] Passive window (${currentHour}:00). 2 hours passed, checking API...`);
-          chrome.storage.local.set({ [LAST_CHECK_TIME_KEY]: now });
-          checkYouTubeAPI();
-        } else {
-          console.log(`[PLM] Passive window (${currentHour}:00). Skipping check to save quota.`);
-        }
-      });
-    }
-  }
-
-  // ── Live program notification at 19:00 ──────────────────
+  // Live program notification at 18:55-19:00
   if (alarm.name === LIVE_ALARM_NAME) {
     checkLiveProgram();
+  }
+
+  // Delayed startup check for new videos
+  if (alarm.name === STARTUP_ALARM_NAME) {
+    console.log("[PLM] 15 minutes since Chrome start. Checking for new videos...");
+    checkYouTubeAPI();
   }
 });
 
@@ -221,7 +206,6 @@ async function mergeAndSaveVideos(newVideos) {
   }
 
   // Only notify for new videos that contain "COMPLETO" in the title
-  // This filters out scheduled/upcoming videos that are already in the playlist
   const completedNewVideos = newVideos.filter(
     (v) => !existingIds.has(v.id) && v.title.toUpperCase().includes("COMPLETO")
   );
@@ -249,15 +233,15 @@ async function mergeAndSaveVideos(newVideos) {
 }
 
 // ─────────────────────────────────────────────────────────
-//  Live program notification at 19:00
+//  Live program notification at 18:55
 // ─────────────────────────────────────────────────────────
 async function checkLiveProgram() {
   const now = new Date();
   const currentHour = now.getHours();
   const currentMinutes = now.getMinutes();
 
-  // Only fire during the 19:00 hour
-  if (currentHour !== 19) return;
+  // Only fire between 18:55 and 19:00
+  if (currentHour !== 18 || currentMinutes < 55) return;
 
   // Check if we already sent the live notification today
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -276,7 +260,7 @@ async function checkLiveProgram() {
     return;
   }
 
-  console.log(`[PLM] 19:${String(currentMinutes).padStart(2, "0")} - Sending live program notification!`);
+  console.log(`[PLM] 18:${String(currentMinutes).padStart(2, "0")} - Sending live program notification!`);
 
   // Look for today's live/scheduled video (one without "COMPLETO")
   const history = data[VIDEO_HISTORY_KEY] || [];
